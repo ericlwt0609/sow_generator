@@ -71,9 +71,10 @@ Generate the SoW using the following structure:
 Also suggest questions for missing or unclear details.
 '''
 
-    client = openai.OpenAI()
-    response = client.chat.completions.create(
-        model="gpt-4o",
+    client = openai.OpenAI(base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
+        
+     response = client.chat.completions.create(
+        model="gemini-2.5-flash",
         messages=[
             {"role": "system", "content": "You are a contract lawyer."},
             {"role": "user", "content": prompt}

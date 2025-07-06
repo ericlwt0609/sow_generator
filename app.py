@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 import tempfile
 import os
 from PyPDF2 import PdfReader
@@ -8,16 +8,20 @@ from docx import Document as DocxWriter
 import requests
 from bs4 import BeautifulSoup
 
+# Set OpenAI API Key from environment
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Extract PDF text
 def extract_pdf_text(file):
     reader = PdfReader(file)
     return "".join(page.extract_text() or "" for page in reader.pages)[:8000]
 
+# Extract DOCX text
 def extract_docx_text(file):
     doc = Document(file)
     return "\n".join(para.text for para in doc.paragraphs)[:8000]
 
+# Fetch example SoW clauses from LawInsider
 def fetch_lawinsider_examples():
     url = "https://www.lawinsider.com/clause/scope-of-work"
     response = requests.get(url)
@@ -25,6 +29,7 @@ def fetch_lawinsider_examples():
     clauses = soup.select(".clause-body")
     return [clause.get_text(strip=True) for clause in clauses[:5]]
 
+# Scrape clauses from a custom URL
 def fetch_text_from_url(url):
     try:
         response = requests.get(url)
@@ -34,6 +39,7 @@ def fetch_text_from_url(url):
     except Exception as e:
         return f"[Error fetching URL content: {e}]"
 
+# Generate SoW using OpenAI
 def generate_sow(base_text, user_desc, selected_examples):
     examples_text = "\n---\n".join(selected_examples) if selected_examples else "None included"
     prompt = f'''
@@ -64,8 +70,8 @@ Generate the SoW using the following structure:
 
 Also suggest questions for missing or unclear details.
 '''
-    client = openai.OpenAI()
 
+    client = openai.OpenAI()
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -74,9 +80,9 @@ Also suggest questions for missing or unclear details.
         ],
         temperature=0.5
     )
-
     return response.choices[0].message.content
 
+# Export output to DOCX
 def export_to_docx(content):
     doc = DocxWriter()
     doc.add_heading("Generated Statement of Work", level=1)
@@ -86,16 +92,17 @@ def export_to_docx(content):
     doc.save(temp_path.name)
     return temp_path.name
 
+# Streamlit UI
 st.title("AI Statement of Work (SoW) Generator")
 
 uploaded_file = st.file_uploader("Upload base contract or scope document (PDF or DOCX)", type=["pdf", "docx"])
 user_desc = st.text_area("Describe the goods/services and business context")
 
 use_examples = st.checkbox("Include example SoWs from LawInsider", value=True)
-selected_examples = []
 custom_examples_input = st.text_area("Paste your own SoW clauses or content here (optional)")
 external_url = st.text_input("Paste a URL to extract external SoW-style clauses (optional)")
 
+selected_examples = []
 if use_examples:
     with st.spinner("Fetching LawInsider examples..."):
         all_examples = fetch_lawinsider_examples()
@@ -105,15 +112,27 @@ if use_examples:
 if st.button("Generate SoW"):
     if uploaded_file and user_desc:
         with st.spinner("Extracting text and generating SoW..."):
-            text = extract_pdf_text(uploaded_file) if uploaded_file.name.endswith(".pdf") else extract_docx_text(uploaded_file)
+            # Extract uploaded content
+            if uploaded_file.name.endswith(".pdf"):
+                text = extract_pdf_text(uploaded_file)
+            else:
+                text = extract_docx_text(uploaded_file)
+
+            # Collect all examples
             combined_examples = selected_examples.copy()
             if custom_examples_input.strip():
                 combined_examples.append(custom_examples_input.strip())
             if external_url.strip():
                 combined_examples.append(fetch_text_from_url(external_url.strip()))
+
+            # Generate SoW
             sow = generate_sow(text, user_desc, combined_examples)
+
+            # Show result
             st.subheader("Generated Statement of Work")
             st.write(sow)
+
+            # Offer download
             docx_path = export_to_docx(sow)
             with open(docx_path, "rb") as f:
                 st.download_button("Download SoW as DOCX", f, file_name="Statement_of_Work.docx")

@@ -8,9 +8,6 @@ from docx import Document as DocxWriter
 import requests
 from bs4 import BeautifulSoup
 
-# Set OpenAI API Key from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Extract PDF text
 def extract_pdf_text(file):
     reader = PdfReader(file)
@@ -71,7 +68,7 @@ Generate the SoW using the following structure:
 Also suggest questions for missing or unclear details.
 '''
 
-    client = openai.OpenAI(base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
+    client = openai.OpenAI(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=os.getenv("OPENAI_API_KEY"))
         
      response = client.chat.completions.create(
         model="gemini-2.5-flash",

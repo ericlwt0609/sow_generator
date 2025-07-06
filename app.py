@@ -64,18 +64,18 @@ Generate the SoW using the following structure:
 
 Also suggest questions for missing or unclear details.
 '''
-client = openai.OpenAI()
+    client = openai.OpenAI()
 
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[
-        {"role": "system", "content": "You are a contract lawyer."},
-        {"role": "user", "content": prompt}
-    ],
-    temperature=0.5
-)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a contract lawyer."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.5
+    )
 
-return response.choices[0].message.content
+    return response.choices[0].message.content
 
 def export_to_docx(content):
     doc = DocxWriter()

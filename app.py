@@ -40,7 +40,7 @@ def fetch_text_from_url(url):
 def generate_sow(base_text, user_desc, selected_examples):
     examples_text = "\n---\n".join(selected_examples) if selected_examples else "None included"
     prompt = f'''
-You are a legal AI assistant. Based on the following base contract text, user description, and example SoW clauses, generate a detailed Statement of Work (SoW).
+You are a legal AI assistant. Based on the following base contract text, user description, and example SoW clauses, generate a detailed Statement of Work (SoW). You should also search the Internet for any information or SoW which are the same or similiar as the subject in question and incorporate relevant information from there. 
 
 ---
 User Description:

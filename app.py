@@ -70,7 +70,7 @@ Also suggest questions for missing or unclear details.
 
     client = openai.OpenAI(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=os.getenv("OPENAI_API_KEY"))
         
-     response = client.chat.completions.create(
+    response = client.chat.completions.create(
         model="gemini-2.5-flash",
         messages=[
             {"role": "system", "content": "You are a contract lawyer."},
